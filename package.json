@@ -1,0 +1,17 @@
+{
+  "name": "asteroid",
+  "version": "1.0.0",
+  "description": "A web server that lets you play the game asteroid against your friends",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Daniel Venable",
+  "license": "ISC",
+  "dependencies": {
+    "serve-static": "^1.15.0",
+    "ws": "^8.13.0"
+  }
+}
