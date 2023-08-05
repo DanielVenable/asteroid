@@ -2,16 +2,25 @@
   "name": "asteroid",
   "version": "1.0.0",
   "description": "A web server that lets you play the game asteroid against your friends",
-  "main": "src/server.js",
+  "main": "out/server/server.js",
   "type": "module",
   "scripts": {
-    "start": "node src/server.js",
+    "start": "node out/server/server.js",
+    "dev": "ts-node --esm src/server/server.ts",
+    "build": "tsc --build && node out/build/build.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Daniel Venable",
   "license": "ISC",
   "dependencies": {
     "serve-static": "^1.15.0",
+    "typescript": "^5.1.6",
     "ws": "^8.13.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.4.7",
+    "@types/serve-static": "^1.15.2",
+    "@types/ws": "^8.5.5",
+    "ts-node": "^10.9.1"
   }
 }

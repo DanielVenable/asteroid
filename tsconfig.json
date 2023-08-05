@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ES2022",
+    "moduleResolution": "NodeNext",
+    "outDir": "out",            // Output directory for transpiled files
+    "rootDir": "./src",         // Source directory
+    "strict": true,                // Enable strict type-checking
+    "esModuleInterop": true,       // Enable ES ModuleInterop
+    "forceConsistentCasingInFileNames": true, // Ensure consistent file names
+    "noImplicitReturns": true,     // Error on functions without return statements
+    "noUnusedLocals": true,        // Error on unused local variables
+  },
+  "include": [
+    "./src/**/*.ts"
+  ]
+}
