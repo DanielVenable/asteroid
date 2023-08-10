@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node out/server/server.js",
     "dev": "ts-node --esm src/server/server.ts",
-    "build": "tsc --build && node out/build/build.js",
+    "build": "tsc --build && node out/build/generateBoard.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Daniel Venable",
@@ -15,7 +15,8 @@
   "dependencies": {
     "serve-static": "^1.15.0",
     "typescript": "^5.1.6",
-    "ws": "^8.13.0"
+    "ws": "^8.13.0",
+    "xmlbuilder2": "^3.1.1"
   },
   "devDependencies": {
     "@types/node": "^20.4.7",
