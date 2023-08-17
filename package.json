@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node out/server/server.js",
     "dev": "ts-node --esm src/server/server.ts",
-    "build": "tsc --build && node out/build/generateBoard.js",
+    "build": "tsc --build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Daniel Venable",

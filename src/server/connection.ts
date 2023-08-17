@@ -3,11 +3,8 @@ import type { WebSocket } from 'ws';
 
 export default class Connection {
     game: Game | null = null;
-    socket: WebSocket;
 
-    constructor(socket : WebSocket) {
-        this.socket = socket;
-
+    constructor(private socket : WebSocket) {
         socket.on('message', data => this.receive(data));
     }
 
@@ -17,7 +14,6 @@ export default class Connection {
         if (type === 'start game') {
             if (this.game !== null) {
                 this.game = new Game(this);
-                this.game.on('code', code => this.sendData('code', code));
             }
         } else if (type === 'join') {
             if (this.game !== null) {
@@ -30,16 +26,12 @@ export default class Connection {
                         this.sendData('join error', reason);
                     } else {
                         this.game = game;
-                        this.listen();
                     }
                 }
             }
+        } else if (type === 'action') {
+            this.game?.action(this, data);
         }
-    }
-
-    /** once a game has been joined, listen for information about it */
-    listen() {
-        
     }
 
     /** send information to the client */
