@@ -10,7 +10,14 @@ export default class Connection {
 
     /** handle an incoming message */
     receive(data : any) {
-        const [type, info] : [string, any] = JSON.parse(String(data));
+        let type : string, info : any;
+
+        try {
+            [type, info] = JSON.parse(String(data));
+        } catch (e) {
+            return;
+        }
+
         if (type === 'start game') {
             if (this.game !== null) {
                 this.game = new Game(this);
@@ -30,7 +37,7 @@ export default class Connection {
                 }
             }
         } else if (type === 'action') {
-            this.game?.action(this, data);
+            this.game?.action(this, info);
         }
     }
 

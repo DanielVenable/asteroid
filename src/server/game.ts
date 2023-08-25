@@ -45,8 +45,6 @@ export default class Game {
         this.emit('board', this.board.toSVG());
         this.emit('robots', this.robots);
         this.emit('programs', this.programs);
-
-        
     }
 
     /** accept an action from a player */
@@ -84,16 +82,17 @@ export default class Game {
         }
 
         // send information to the players
-        const changes = this.players.map(player => this.changes.get(player));
-        this.emit('round', { robots: this.robots, changes });
+        this.emit('changes', this.players.map(player => this.changes.get(player)));
+        this.emit('robots', this.robots);
+        this.emit('programs', this.programs);
 
         this.changes.clear();
     }
 
     async generateCode() {
         this.code = (await promisify(randomBytes)(6)).toString('base64url');
-        this.emit('code', this.code);
         Game.instances.set(this.code, this);
+        this.emit('code', this.code);
     }
 
     /** sends information to all players */
@@ -120,8 +119,14 @@ enum Direction {
 class Robot {
     constructor(public x : number, public y : number, public facing : Direction) {}
 
-    /** moves the robot */
+    /** moves the robot 2 steps */
     move(board : Board, programs : Program[], robots : Robot[]) {
+        this.moveOnce(board, programs, robots);
+        this.moveOnce(board, programs, robots);
+    }
+
+    /** moves the robot 1 step */
+    moveOnce(board : Board, programs : Program[], robots : Robot[]) {
         const program = programs[board.get(this.x, this.y)];
 
         const positionAfterStep = (isRight : boolean) : [number, number] => {
@@ -143,12 +148,17 @@ class Robot {
                 robots.some(robot => robot.x === newPos[0] && robot.y === newPos[1])) {
             // if the robot would go off the board or there is already a robot there,
             // it stays where it is and rotates 120 degrees
-            this.facing = (this.facing + (direction ? -2 : 2)) % 6;
+            this.rotate(direction ? -2 : 2);
         } else {
             // otherwise, it moves and rotates 60 degrees
             [this.x, this.y] = newPos;
-            this.facing = (this.facing + (direction ? -1 : 1)) % 6;
+           this.rotate(direction ? -1 : 1);
         }
+    }
+
+    rotate(amount : -2 | -1 | 1 | 2) {
+        // I need to add 6 before doing % here because % does not work properly on negative numbers
+        this.facing = (this.facing + amount + 6) % 6;
     }
 
     static make6() {
