@@ -14,16 +14,16 @@ export default class Connection {
 
         try {
             [type, info] = JSON.parse(String(data));
-        } catch (e) {
+        } catch {
             return;
         }
 
         if (type === 'start game') {
-            if (this.game !== null) {
+            if (this.game === null) {
                 this.game = new Game(this);
             }
         } else if (type === 'join') {
-            if (this.game !== null) {
+            if (this.game === null) {
                 const game = Game.find(info);
                 if (game === undefined) {
                     this.sendData('join error', 'not found');
