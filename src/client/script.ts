@@ -1,28 +1,8 @@
-class Player {
-    ws = new WebSocket(
-        `${window.location.protocol === 'http:' ? 'ws' : 'wss'
-        }://${window.location.host}`);
-    code?: string;
+import Player from './player.js';
+import QRCode from 'https://cdn.skypack.dev/qrcode@1.5.3';
 
-    constructor() {
-        this.ws.addEventListener('message', message => {
-            const [type, data] : [string, any] = message.data;
-            if (type === 'board') {
-                document.querySelector('#svg-container')!.innerHTML = data;
-            } else if (type === 'code') {
-                this.code = data;
-                document.querySelector('#code')!.textContent = data;
-            }
-        });
+const { protocol, host, origin, pathname } = window.location;
 
-        document.querySelector('#start')!.addEventListener('click', () => {
-            this.emit('start game');
-        });
-    }
-
-    emit(type : any, data? : any) {
-        this.ws.send(JSON.stringify([type, data]));
-    }
-}
-
-new Player();
+Player(window, new WebSocket(
+    `${protocol === 'http:' ? 'ws' : 'wss'}://${host}`),
+    code => QRCode.toCanvas(document.querySelector('#qrcode'), `${origin}${pathname}?g=${code}`));

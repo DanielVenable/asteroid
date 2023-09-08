@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "ES2022",
+    "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "outDir": "out",            // Output directory for transpiled files
     "rootDir": "./src",         // Source directory
@@ -10,8 +10,11 @@
     "forceConsistentCasingInFileNames": true, // Ensure consistent file names
     "noImplicitReturns": true,     // Error on functions without return statements
     "noUnusedLocals": true,        // Error on unused local variables
+    "paths": {
+      "https://cdn.skypack.dev/qrcode@1.5.3": ["./node_modules/@types/qrcode/index.d.ts"]
+    }
   },
   "include": [
     "./src/**/*.ts"
-  ]
+  ],
 }

@@ -1,0 +1,62 @@
+body > div {
+    display: none;
+    position: fixed;
+    inset: 0;
+    align-items: center;
+    justify-content: center;
+}
+
+.intro {
+    flex-direction: column;
+}
+
+[data-mode="intro"] > .intro,
+[data-mode="waiting-for-players"] > .waiting-for-players,
+[data-mode="playing"] > .playing {
+    display: flex;
+}
+
+#enter-code-box {
+    border: 1px solid black;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+#join-response {
+    font-style: italic;
+    color: gray;
+}
+
+#join-response.join-error {
+    color: red;
+}
+
+.playing > * {
+    width: 100%;
+    height: 100%;
+}
+
+.column {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+button {
+    margin: 20px;
+    padding: 7px;
+    font-size: 20px;
+    background-color: #0af30a;
+    border: 1px solid black;
+    border-radius: 20px;
+    cursor: pointer;
+    box-shadow: 2px 2px 5px #5c5c5c;
+}
+
+button:hover {
+    background-color: #00ff00;
+}
+
+button:active {
+    background-color: #19db19;
+}

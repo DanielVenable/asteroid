@@ -21,9 +21,11 @@
   "devDependencies": {
     "@types/jasmine": "^4.3.5",
     "@types/node": "^20.4.7",
+    "@types/qrcode": "^1.5.1",
     "@types/serve-static": "^1.15.2",
     "@types/ws": "^8.5.5",
     "jasmine": "^5.1.0",
+    "jsdom": "^22.1.0",
     "ts-node": "^10.9.1"
   }
 }

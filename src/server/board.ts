@@ -50,7 +50,7 @@ export class Board {
         // loop through all triangles in the grid.
         // the outer loop loops through the coordinates of each hexagon,
         // and the inner loop loops through the coordinates of each triangle inside each hex.
-        const colors = [0xff0000, 0x00ff00, 0x0000ff];
+        const colors = ['#ff0000', '#00ff00', '#0000ff'];
 
         for (const [hexX, hexY] of Board.hexes) {
             for (const [triX, triY] of Board.triangles) {

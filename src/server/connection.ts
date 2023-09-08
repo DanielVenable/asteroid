@@ -18,7 +18,7 @@ export default class Connection {
             return;
         }
 
-        if (type === 'start game') {
+        if (type === 'new game') {
             if (this.game === null) {
                 this.game = new Game(this);
             }
@@ -33,8 +33,13 @@ export default class Connection {
                         this.sendData('join error', reason);
                     } else {
                         this.game = game;
+                        this.sendData('code', info);
                     }
                 }
+            }
+        } else if (type === 'begin') {
+            if (this === this.game?.players[0]) {
+                this.game.start();
             }
         } else if (type === 'action') {
             this.game?.action(this, info);

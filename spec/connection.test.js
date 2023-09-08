@@ -14,8 +14,8 @@ describe('connection should respond to commands:', () => {
         connection = new Connection(wsSpy);
     });
 
-    it('start game', () => {
-        send(['start game', undefined]);
+    it('new game', () => {
+        send(['new game', undefined]);
         expect(connection.game).toEqual(jasmine.any(Game));
     });
 

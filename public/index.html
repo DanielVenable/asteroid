@@ -3,17 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
     <title>Asteroid</title>
     <script type="module" src="script.js" defer></script>
 </head>
-<body>
-    <div>
-        <button id="start">Start</button>
-        <button id="join">Join</button>
+<body data-mode="intro">
+    <div class="intro">
+        <div>
+            <button id="start"> Start a new game </button>
+            <button id="join">  Join a game      </button>
+        </div>
+        <div id="enter-code-box" hidden>
+            Enter code:
+            <p>
+                <input id="enter-code">
+                <input id="submit-code" type="submit" value="Go!">
+            </p>
+            <p id="join-response"></p>
+            Don't know the code? Ask whoever started the game.
+        </div>
     </div>
-    <div>
-        <div id="svg-container"></div>
+    <div class="waiting-for-players">
         <div id="code"></div>
+        <canvas id="qrcode"></canvas>
+        <button id="begin" hidden>Start game</button>
+    </div>
+    <div class="playing">
+        <div id="board-placeholder"></div>
+        <div class="column">
+            <object data="program.svg" type="image/svg+xml" data-color="0"></object>
+            <object data="program.svg" type="image/svg+xml" data-color="1"></object>
+            <object data="program.svg" type="image/svg+xml" data-color="2"></object>
+        </div>
     </div>
 </body>
 </html>
