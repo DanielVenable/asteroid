@@ -16,6 +16,10 @@ body > div {
     display: flex;
 }
 
+.playing > object {
+    max-width: 26%;
+}
+
 #enter-code-box {
     border: 1px solid black;
     padding: 10px;
@@ -29,17 +33,6 @@ body > div {
 
 #join-response.join-error {
     color: red;
-}
-
-.playing > * {
-    width: 100%;
-    height: 100%;
-}
-
-.column {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
 }
 
 button {

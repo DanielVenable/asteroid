@@ -70,11 +70,13 @@ export default function player (
         if (type === 'board') {
             changeMode('playing');
             select('board-placeholder').outerHTML = data;
-            for (const { contentDocument, dataset } of
-                    document.querySelectorAll('object[data="program.svg"]') as
-                        NodeListOf<HTMLObjectElement>) {
-                const elem : SVGPathElement = contentDocument!.querySelector('#center')!;
-                elem.style.fill = colors[+dataset.color!];
+            const { contentDocument } : HTMLObjectElement =
+                document.querySelector('object[data="program.svg"]')!;
+            for (const color of [0, 1, 2]) {
+                contentDocument!.querySelector(`[data-color="${color}"]`)!
+                        .addEventListener('click', () => {
+                    // TODO: make menu appear that lets you pick what to change it to
+                });
             }
         } else if (type === 'code') {
             changeMode('waiting-for-players');
