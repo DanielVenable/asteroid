@@ -18,6 +18,12 @@ body > div {
 
 .playing > object {
     max-width: 26%;
+    max-height: 100vh;
+}
+
+.playing > svg {
+    max-height: 100vh;
+    max-width: 100vh;
 }
 
 #enter-code-box {
