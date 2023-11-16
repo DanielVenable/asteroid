@@ -17,7 +17,7 @@ body > div {
 }
 
 .playing > object {
-    max-width: 26%;
+    max-width: 40%;
     max-height: 100vh;
 }
 
