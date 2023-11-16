@@ -18,7 +18,7 @@ export class Board {
 
     /** get the color at a certain position */
     get(x : number, y : number) : Color {
-        return this.#grid[x + Board.shiftX][y + Board.shiftY];
+        return this.#grid[x + Board.shiftX]?.[y + Board.shiftY];
     }
 
     /** create an svg of the board */
