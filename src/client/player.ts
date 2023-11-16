@@ -67,17 +67,76 @@ export default function player (
         const colors = ['#ff0000', '#00ff00', '#0000ff'];
 
         const [type, data] : [string, any] = JSON.parse(message.data);
+
         if (type === 'board') {
+
             changeMode('playing');
             select('board-placeholder').outerHTML = data;
-            const { contentDocument } : HTMLObjectElement =
-                document.querySelector('object[data="program.svg"]')!;
+
+            const { contentDocument: doc } : HTMLObjectElement =
+                document.querySelector('object[data="program.svg"]')!,
+
+                menu : SVGElement = doc!.querySelector('#menu')!,
+                submitBtn : SVGElement = doc!.querySelector('#submit')!;
+
+            let selectedColor : number, value : number | boolean | undefined;
+
+            function setValue(val : number | boolean | undefined) {
+                if (value === val) return;
+
+                if (value === undefined) {
+                    // there was nothing selected but now there is
+                    submitBtn.classList.remove('hidden');
+                } else {
+                    // there was something selected
+                    buttons.get(value)!.classList.remove('selected');
+                }
+
+                if (val === undefined) {
+                    // it is being unselected
+                    submitBtn.classList.add('hidden');
+                } else {
+                    // something is being selected
+                    buttons.get(val)!.classList.add('selected');
+                }
+
+                value = val;
+            }
+
+            /** a map from value to button */
+            const buttons = new Map(<[number | boolean, SVGElement][]> [
+                [false, doc!.querySelector('#btn-l')],
+                [true, doc!.querySelector('#btn-r')]
+            ]);
+
+            // when you click on a program tile, select that color and show the menu
             for (const color of [0, 1, 2]) {
-                contentDocument!.querySelector(`[data-color="${color}"]`)!
+                buttons.set(color, doc!.querySelector(`[data-btn-color="${color}"]`)!);
+
+                doc!.querySelector(`[data-color="${color}"]`)!
                         .addEventListener('click', () => {
-                    // TODO: make menu appear that lets you pick what to change it to
+                    menu.classList.remove('hidden');
+                    setValue(undefined);
+                    selectedColor = color;
                 });
             }
+
+            // attach events to each button that set value
+            for (const [val, btn] of buttons) {
+                btn.addEventListener('click', () => setValue(val));
+            }
+
+            doc!.querySelector('#submit')!.addEventListener('click', () => {
+                // submit whatever is selected
+                if (selectedColor !== undefined && value !== undefined) {
+                    emit('action', [selectedColor, value]);
+                    menu.classList.add('hidden');
+                    setValue(undefined);
+                } else {
+                    console.error('value must be selected before submitting');
+                }
+            });
+
         } else if (type === 'code') {
             changeMode('waiting-for-players');
             select('code').textContent = data;
@@ -100,12 +159,11 @@ export default function player (
                 response.classList.add('join-error');
             }
         } else if (type === 'programs') {
+            const elem : HTMLObjectElement = document.querySelector(`object.programs`)!;
             for (const { isRight, exception, color } of data) {
-                const elem : HTMLObjectElement =
-                    document.querySelector(`object[data-color="${color}"]`)!;
                 const triangles : [SVGPathElement, SVGPathElement] = [
-                    elem.contentDocument!.querySelector('#left')!,
-                    elem.contentDocument!.querySelector('#right')!];
+                    elem.contentDocument!.querySelector(`[data-color="${color}"] .left`)!,
+                    elem.contentDocument!.querySelector(`[data-color="${color}"] .right`)!];
                 
                 triangles[+isRight].style.fill = colors[exception];
                 triangles[+!isRight].style.fill = 'none';
