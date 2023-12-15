@@ -69,11 +69,14 @@ export class Board {
         // make the robots
         const robots = svg.ele('g', { id: 'robots' });
 
-        Board.triangles.forEach(([x, y], direction) => {
-            robots.ele('g', { transform: `translate(${(x + 1) / 2}, ${Math.sqrt(3) / 2 * (y + (isDown(x, y) ? 1/3 : 2/3))})` })
+        for (let i = 0; i < 6; i++) {
+            robots.ele('g', { transform: `translate(0, 0)` })
                 // this assumes images are 1024x1024
-                .ele('image', { href: './robot.png', transform: `scale(0.0006) rotate(${-60 - direction * 60}) translate(-512, -500)` });
-        });
+                .ele('image', {
+                    href: './robot.png',
+                    transform: `scale(0.0006) rotate(0) translate(-512, -500)`
+                });
+        }
     
         return svg.end({ prettyPrint: true });
 
