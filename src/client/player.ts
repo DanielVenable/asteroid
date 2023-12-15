@@ -168,6 +168,16 @@ export default function player (
                 triangles[+isRight].style.fill = colors[exception];
                 triangles[+!isRight].style.fill = 'none';
             }
+        } else if (type === 'robots') {
+            const robots : any = document.querySelector('#robots')!.children;
+            for (let i = 0; i < 6; i++) {
+                // TODO: add smooth animation
+                const { x, y, facing } = data[i];
+                robots[i].transform.baseVal.getItem(0).setTranslate(
+                    (x + 1) / 2,
+                    Math.sqrt(3) / 2 * (y + ((x + y) % 2 === 0 ? 1/3 : 2/3)));
+                robots[i].children[0].transform.baseVal.getItem(1).setRotate(300 - facing * 60, 0, 0);
+            }
         }
     });
 }
