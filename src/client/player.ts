@@ -61,9 +61,12 @@ export default function player (
         response.classList.remove('join-error');
     }
 
+    const programLoad = new Promise(resolve =>
+        document.querySelector('object.programs')!.addEventListener('load', resolve));
+
     // handle information from the server:
 
-    ws.addEventListener('message', message => {
+    ws.addEventListener('message', async message => {
         const colors = ['#ff0000', '#00ff00', '#0000ff'];
 
         const [type, data] : [string, any] = JSON.parse(message.data);
@@ -73,8 +76,10 @@ export default function player (
             changeMode('playing');
             select('board-placeholder').outerHTML = data;
 
+            await programLoad;
+
             const { contentDocument: doc } : HTMLObjectElement =
-                document.querySelector('object[data="program.svg"]')!,
+                document.querySelector('object.programs')!,
 
                 menu : SVGElement = doc!.querySelector('#menu')!,
                 submitBtn : SVGElement = doc!.querySelector('#submit')!;
@@ -159,6 +164,8 @@ export default function player (
                 response.classList.add('join-error');
             }
         } else if (type === 'programs') {
+            await programLoad;
+
             const elem : HTMLObjectElement = document.querySelector(`object.programs`)!;
             for (const { isRight, exception, color } of data) {
                 const triangles : [SVGPathElement, SVGPathElement] = [
