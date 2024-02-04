@@ -61,6 +61,9 @@ export default function player (
         response.classList.remove('join-error');
     }
 
+    /** the directions each of the robots are facing */
+    const robotFacing = [0, 1, 2, 3, 4, 5];
+
     const programLoad = new Promise(resolve =>
         document.querySelector('object.programs')!.addEventListener('load', resolve));
 
@@ -178,12 +181,55 @@ export default function player (
         } else if (type === 'robots') {
             const robots : any = document.querySelector('#robots')!.children;
             for (let i = 0; i < 6; i++) {
-                // TODO: add smooth animation
-                const { x, y, facing } = data[i];
-                robots[i].transform.baseVal.getItem(0).setTranslate(
-                    (x + 1) / 2,
-                    Math.sqrt(3) / 2 * (y + ((x + y) % 2 === 0 ? 1/3 : 2/3)));
-                robots[i].children[0].transform.baseVal.getItem(1).setRotate(300 - facing * 60, 0, 0);
+                if (data[i].intermediatePos) {
+                    await animate(robots[i], robotFacing[i], data[i].intermediatePos);
+                    await animate(robots[i], data[i].intermediatePos.facing, data[i]);
+                } else {
+                    robots[i].transform.baseVal.getItem(0)
+                        .setTranslate(...coords(data[i].x, data[i].y));
+                    robots[i].children[0].transform.baseVal.getItem(1)
+                        .setRotate(300 - data[i].facing * 60, 0, 0);
+                }
+                robotFacing[i] = data[i].facing;
+            }
+
+            function animate(bot : any, prevFacing : number,
+                    { x, y, facing } : { x : number, y : number, facing : number }) {
+                return new Promise<void>(resolve => {                
+                    const DURATION = 200, // milliseconds
+                        startTime = performance.now(),
+
+                        translateMatrix : SVGTransform = bot.transform.baseVal.getItem(0),
+                        rotateMatrix : SVGTransform = bot.children[0].transform.baseVal.getItem(1),
+
+                        { e: startX, f: startY } = translateMatrix.matrix,
+                        [endX, endY] = coords(x, y),
+
+                        deltaX = endX - startX,
+                        deltaY = endY - startY,
+
+                        rotationMultiplier = (facing - prevFacing + 9) % 6 - 3;
+
+                    function frame() {
+                        const progress = (performance.now() - startTime) / DURATION;
+                        if (progress >= 1) {
+                            translateMatrix.setTranslate(endX, endY);
+                            rotateMatrix.setRotate(300 - facing * 60, 0, 0);
+                            resolve();
+                        } else {
+                            translateMatrix.setTranslate(
+                                startX + progress * deltaX,
+                                startY + progress * deltaY);
+                            rotateMatrix.setRotate(300 - (prevFacing + progress * rotationMultiplier) * 60, 0, 0);
+                            requestAnimationFrame(frame);
+                        }
+                    }
+                    requestAnimationFrame(frame);
+                });
+            }
+
+            function coords(x : number, y : number) {
+                return [(x + 1) / 2, Math.sqrt(3) / 2 * (y + ((x + y) % 2 === 0 ? 1/3 : 2/3))];
             }
         }
     });

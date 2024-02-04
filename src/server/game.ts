@@ -117,14 +117,14 @@ enum Direction {
 
 /** a robot that goes on the board */
 class Robot {
-    intermediatePos? : String;
+    intermediatePos? : { x : number, y : number, facing : Direction };
 
     constructor(public x : number, public y : number, public facing : Direction) {}
 
     /** moves the robot 2 steps */
     move(board : Board, programs : Program[], robots : Robot[]) {
         this.moveOnce(board, programs, robots);
-        this.intermediatePos = JSON.stringify(this, ['x', 'y', 'facing']);
+        this.intermediatePos = { x: this.x, y: this.y, facing: this.facing };
         this.moveOnce(board, programs, robots);
     }
 
