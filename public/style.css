@@ -1,7 +1,21 @@
-body > div {
-    display: none;
-    position: fixed;
-    inset: 0;
+html, body {
+    margin: 0;
+}
+
+.main {
+    min-height: 100vh;
+    min-width: 100vw;
+    display: flex;
+    align-content: center;
+    flex-wrap: wrap;
+}
+
+.main > * {
+    flex: 1 1 300px;
+}
+
+.flex {
+    display: flex;
     align-items: center;
     justify-content: center;
 }
@@ -10,20 +24,27 @@ body > div {
     flex-direction: column;
 }
 
-[data-mode="intro"] > .intro,
-[data-mode="waiting-for-players"] > .waiting-for-players,
-[data-mode="playing"] > .playing {
-    display: flex;
+.players {
+    flex-grow: 0;
+    flex-direction: column;
+}
+
+.main > :not(
+    [data-mode="intro"] .intro,
+    [data-mode="waiting-for-players"] .waiting-for-players,
+    [data-mode="playing"] .playing,
+    body:not([data-mode="intro"]) .players 
+) {
+    display: none;
 }
 
 .playing > object {
-    max-width: 40%;
+    max-width: 100%;
     max-height: 100vh;
 }
 
-.playing > svg {
-    max-height: 100vh;
-    max-width: 100vh;
+svg.playing {
+    height: fit-content;
 }
 
 #enter-code-box {

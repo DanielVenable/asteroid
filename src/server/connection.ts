@@ -3,6 +3,8 @@ import type { WebSocket } from 'ws';
 
 export default class Connection {
     game: Game | null = null;
+    name?: string;
+    number?: number;
 
     constructor(private socket : WebSocket) {
         socket.on('message', data => this.receive(data));
@@ -43,6 +45,9 @@ export default class Connection {
             }
         } else if (type === 'action') {
             this.game?.action(this, info);
+        } else if (type === 'display name' && String(info) && this.game?.isStarted === false) {
+            this.name = String(info);
+            this.game.nameChange(this);
         }
     }
 

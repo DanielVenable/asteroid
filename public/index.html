@@ -7,30 +7,37 @@
     <title>Asteroid</title>
     <script type="module" src="script.js" defer></script>
 </head>
-<body data-mode="intro">
-    <div class="intro">
-        <div>
-            <button id="start"> Start a new game </button>
-            <button id="join">  Join a game      </button>
+<body data-mode="intro" class="flex">
+    <div class="main">
+        <div class="intro flex">
+            <div>
+                <button id="start"> Start a new game </button>
+                <button id="join">  Join a game      </button>
+            </div>
+            <div id="enter-code-box" hidden>
+                Enter code:
+                <p>
+                    <input id="enter-code">
+                    <input id="submit-code" type="submit" value="Go!">
+                </p>
+                <p id="join-response"></p>
+                Don't know the code? Ask whoever started the game.
+            </div>
         </div>
-        <div id="enter-code-box" hidden>
-            Enter code:
-            <p>
-                <input id="enter-code">
-                <input id="submit-code" type="submit" value="Go!">
-            </p>
-            <p id="join-response"></p>
-            Don't know the code? Ask whoever started the game.
+        <div class="waiting-for-players flex">
+            <div id="code"></div>
+            <canvas id="qrcode"></canvas>
+            <button id="begin" hidden>Start game</button>
         </div>
-    </div>
-    <div class="waiting-for-players">
-        <div id="code"></div>
-        <canvas id="qrcode"></canvas>
-        <button id="begin" hidden>Start game</button>
-    </div>
-    <div class="playing">
-        <div id="board-placeholder"></div>
-        <object data="program.svg" type="image/svg+xml" class="programs"></object>
+        <div id="board-container" class="playing"></div>
+        <div id="program-container" class="playing">
+            <object data="program.svg" type="image/svg+xml" class="programs"></object>
+        </div>
+        <div class="players flex">
+            Players:
+            <input id="display-name">
+        </div>
+        </div>
     </div>
 </body>
 </html>

@@ -26,8 +26,6 @@ export class Board {
         const svg = createXML({ version: "1.0", encoding: "UTF-8" })
             .ele('svg', {
                 xmlns: "http://www.w3.org/2000/svg",
-                width: "1000",
-                height: "1000",
                 viewBox: "-5 -5 10 10"
             });
     

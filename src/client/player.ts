@@ -9,6 +9,16 @@ export default function player (
     const btnClick = (str: string, func: (ev: MouseEvent) => void) =>
         select(str).addEventListener('click', func);
 
+    function inputSubmit(input : string, button : string, func : (value: string) => void) {
+        const elem = <HTMLInputElement> select(input);
+        btnClick(button, () => func(elem.value));
+        elem.addEventListener('keydown', e => {
+            if (e.code === 'Enter') {
+                func(elem.value);
+            }
+        });
+    }
+
     function emit(type : any, data? : any) {
         const send = () => ws.send(JSON.stringify([type, data]));
 
@@ -46,23 +56,25 @@ export default function player (
         select('enter-code').focus();
     });
 
-    btnClick('submit-code', submitCode);
-    select('enter-code').addEventListener('keydown', e => {
-        if (e.code === 'Enter') {
-            submitCode();
-        }
-    });
-
-    function submitCode() {
-        const code = (<HTMLInputElement> select('enter-code')).value;
+    inputSubmit('enter-code', 'submit-code', code => {
         emit('join', code);
         const response = select('join-response');
         response.textContent = 'Loading...';
         response.classList.remove('join-error');
-    }
+    });
+
+    select('display-name').addEventListener('change', function() {
+        const { value } = <HTMLInputElement> this;
+        if (value) {
+            emit('display name', value);
+        }
+    });
 
     /** the directions each of the robots are facing */
     const robotFacing = [0, 1, 2, 3, 4, 5];
+
+    /** a list of names of players */
+    const names : String[] = [];
 
     const programLoad = new Promise(resolve =>
         document.querySelector('object.programs')!.addEventListener('load', resolve));
@@ -77,7 +89,7 @@ export default function player (
         if (type === 'board') {
 
             changeMode('playing');
-            select('board-placeholder').outerHTML = data;
+            select('board-container').innerHTML = data;
 
             await programLoad;
 
@@ -231,6 +243,18 @@ export default function player (
             function coords(x : number, y : number) {
                 return [(x + 1) / 2, Math.sqrt(3) / 2 * (y + ((x + y) % 2 === 0 ? 1/3 : 2/3))];
             }
+        } else if (type === 'name') {
+            let elem;
+            if (data.index in names) {
+                elem = document.querySelector(`[data-player-id="${data.index}"]`)!;
+            } else {
+                elem = document.createElement('span');
+                elem.dataset.playerId = data.index;
+                document.querySelector('.players')!.append(elem);
+            }
+            elem.textContent = names[data.index] = data.name;
+        } else if (type === 'you are') {
+            (<HTMLInputElement> document.querySelector('#display-name')).value = data.name;
         }
     });
 }

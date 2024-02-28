@@ -1,5 +1,4 @@
 import { randomBytes } from 'crypto';
-import { promisify } from 'util';
 
 import { Board, Color } from './board.js';
 
@@ -8,7 +7,6 @@ import type Connection from './connection.js';
 export default class Game {
     players : Connection[] = [];
     isStarted = false;
-    creator: Connection;
     code?: string;
 
     board? : Board;
@@ -17,9 +15,7 @@ export default class Game {
     changes : Map<Connection, Change> = new Map;
 
     constructor(creator : Connection) {
-        this.creator = creator;
-        this.players.push(creator);
-
+        this.newPlayer(creator);
         this.generateCode();
     }
 
@@ -31,8 +27,31 @@ export default class Game {
         if (this.isStarted) {
             return 'already started';
         }
-        this.players.push(player);
+        
+        for (const other of this.players) {
+            player.sendData('name', {index: other.number, name: other.name});
+        }
+        this.newPlayer(player);
+
         return undefined;
+    }
+
+    newPlayer(player : Connection) {
+        player.number = this.players.length;
+        player.name = `Player ${player.number + 1}`;
+        const obj = { index: player.number, name: player.name };
+        this.emit('name', obj);
+        player.sendData('you are', obj);
+        this.players[player.number] = player;
+    }
+
+    /** tells everyone else one player's new name */
+    nameChange(player : Connection) {
+        for (let i = 0; i < this.players.length; i++) {
+            if (i !== player.number) {
+                this.players[i].sendData('name', { index: player.number, name: player.name });
+            }
+        }
     }
 
     /** starts the game */
@@ -89,8 +108,8 @@ export default class Game {
         this.changes.clear();
     }
 
-    async generateCode() {
-        this.code = (await promisify(randomBytes)(6)).toString('base64url');
+    generateCode() {
+        this.code = randomBytes(6).toString('base64url');
         Game.instances.set(this.code, this);
         this.emit('code', this.code);
     }

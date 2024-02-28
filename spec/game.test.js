@@ -28,14 +28,9 @@ describe('game before starting', () => {
         expect(game.join(fakePlayer())).toBe('already started');
     });
 
-    it('send code', done => {
-        player.sendData.and.callFake((type, code) => {
-            expect(type).toBe('code');
-            expect(code).toBeInstanceOf(String);
-            expect(Game.find(code)).toBe(game);
-            expect(Game.find('')).toBe(undefined);
-            done();
-        });
+    it('send code', () => {
+        expect(player.sendData).toHaveBeenCalledWith('code', game.code);
+        expect(Game.find(game.code)).toBe(game);
     });
 });
 
