@@ -80,3 +80,30 @@ button:hover {
 button:active {
     background-color: #19db19;
 }
+
+.players {
+    border: 1px solid black;
+    height: fit-content;
+    padding: 5px;
+}
+
+.players > div {
+    width: 100%;
+    margin-top: 5px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.status {
+    height: 1lh;
+}
+
+.display-name {
+    height: 1lh;
+    max-width: 30ch;
+    overflow: auto;
+}
+
+[data-mode="playing"] .you {
+    font-weight: bold;
+}

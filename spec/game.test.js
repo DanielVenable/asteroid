@@ -36,7 +36,7 @@ describe('game before starting', () => {
 
 describe('game while playing', () => {
     let /** @type {{ 'sendData': jasmine.Spy }} */ player1,
-        /** @type { Object } */ player2,
+        /** @type {{ 'sendData': jasmine.Spy }} */ player2,
         /** @type { Game } */ game;
 
     beforeEach(() => {
@@ -91,6 +91,23 @@ describe('game while playing', () => {
             jasmine.objectContaining({ color: 1, exception: 2, isRight: true }),
             jasmine.objectContaining({ color: 2, exception: 2, isRight: true })
         ]));
+    });
+
+    it('reports changes', () => {
+        game.action(player1, [0, 1]);
+
+        expect(player1.sendData).not.toHaveBeenCalledWith('changes', jasmine.anything());
+        expect(player2.sendData).not.toHaveBeenCalledWith('changes', jasmine.anything());
+
+        game.action(player2, [2, true]);
+
+        const changes = jasmine.arrayContaining([
+            jasmine.arrayContaining([0, 1]),
+            jasmine.arrayContaining([2, true])
+        ]);
+
+        expect(player1.sendData).toHaveBeenCalledWith('changes', changes);
+        expect(player2.sendData).toHaveBeenCalledWith('changes', changes);
     });
 
     it('moves robots', () => {

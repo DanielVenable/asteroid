@@ -91,6 +91,15 @@ export default function player (
             changeMode('playing');
             select('board-container').innerHTML = data;
 
+            const elem = document.createElement('div');
+            elem.classList.add('display-name');
+            elem.textContent =
+                (<HTMLInputElement> document.querySelector('#display-name')!).value;
+
+            document.querySelector('#display-name')!.remove();
+
+            document.querySelector('.you')!.prepend(elem);
+ 
             await programLoad;
 
             const { contentDocument: doc } : HTMLObjectElement =
@@ -243,18 +252,46 @@ export default function player (
             function coords(x : number, y : number) {
                 return [(x + 1) / 2, Math.sqrt(3) / 2 * (y + ((x + y) % 2 === 0 ? 1/3 : 2/3))];
             }
-        } else if (type === 'name') {
-            let elem;
-            if (data.index in names) {
-                elem = document.querySelector(`[data-player-id="${data.index}"]`)!;
-            } else {
-                elem = document.createElement('span');
-                elem.dataset.playerId = data.index;
-                document.querySelector('.players')!.append(elem);
+        } else if (type === 'changes') {
+            for (let i = 0; i < data.length; i++) {
+                const object : HTMLObjectElement = document.querySelector(
+                    `[data-player-id="${i}"] object.status`)!;
+                
+                if (object.contentDocument === null) {
+                    // not loaded yet
+                    await new Promise(resolve => object.addEventListener('load', resolve));
+                }
+
+                const doc = object.contentDocument!;
+                (<SVGElement> doc.querySelector('#triangle'))!.dataset.color = data[i][0];
+                doc.documentElement.dataset.value = data[i][1];
             }
-            elem.textContent = names[data.index] = data.name;
+        } else if (type === 'name') {
+            let textElem;
+            if (data.index in names) {
+                textElem = document.querySelector(`[data-player-id="${data.index}"] > .display-name`)!;
+            } else {
+                const parentElem = document.createElement('div'),
+                    changeElem = createChangeElem();
+                textElem = document.createElement('div');
+                parentElem.append(textElem, changeElem);
+                textElem.classList.add('display-name');
+                parentElem.dataset.playerId = data.index;
+                document.querySelector('.players')!.append(parentElem);
+            }
+            textElem.textContent = names[data.index] = data.name;
         } else if (type === 'you are') {
             (<HTMLInputElement> document.querySelector('#display-name')).value = data.name;
+            (<HTMLElement> document.querySelector('.you'))!.dataset.playerId = data.index;
+            (<HTMLElement> document.querySelector('.you'))!.append(createChangeElem());
+        }
+
+        function createChangeElem() {
+            const changeElem = document.createElement('object');
+            changeElem.classList.add('status');
+            changeElem.type = 'image/svg+xml';
+            changeElem.data = 'change.svg';
+            return changeElem;
         }
     });
 }
