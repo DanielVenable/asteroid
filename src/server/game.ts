@@ -13,6 +13,7 @@ export default class Game {
     robots? : Robot[];
     programs? : Program[];
     changes : Map<Connection, Change> = new Map;
+    goals? : Number[][];
 
     constructor(creator : Connection) {
         this.newPlayer(creator);
@@ -60,10 +61,12 @@ export default class Game {
         this.board = new Board();
         this.robots = Robot.make6();
         this.programs = Program.make3();
+        this.goals = Game.goals[this.players.length - 1];
 
         this.emit('board', this.board.toSVG());
         this.emit('robots', this.robots);
         this.emit('programs', this.programs);
+        this.emit('goals', this.goals);
     }
 
     /** accept an action from a player */
@@ -96,8 +99,26 @@ export default class Game {
         }
 
         // do the moves of the robots
+        let winners = [];
+
         for (const robot of this.robots!) {
-            robot.move(this.board!, this.programs!, this.robots!);
+            const winner = robot.move(this);
+            if (winner) {
+                winners.push(winner);
+            }
+        }
+
+        // if there are multiple winners in the same round,
+        // only those who won in the first step win
+        if (winners.length) {
+            const step = winners[0][1];
+            for (let i = 1; i < winners.length; i++) {
+                if (winners[i][1] !== step) {
+                    winners = winners.filter(([, step]) => step === 0);
+                    break;
+                }
+            }
+            this.emit('winners', winners.map(([a]) => a));
         }
 
         // send information to the players
@@ -126,6 +147,15 @@ export default class Game {
     }
 
     static instances : Map<string, Game> = new Map();
+
+    static goals = [
+        [[-1,3]],
+        [[-1,3], [-1,-4]],
+        [[-1,3], [-6,-2], [4,-2]],
+        [[-1,3], [-6, 1], [-1,-4], [4,-2]],
+        [[-1,3], [-6, 1], [-6,-2], [-1,-4], [4,-2]],
+        [[-1,3], [-6, 1], [-6,-2], [-1,-4], [4,-2], [4,1]]
+    ];
 }
 
 /** directions a robot could face. robots 1-6 start facing in these directions (in order) */
@@ -141,15 +171,22 @@ class Robot {
     constructor(public x : number, public y : number, public facing : Direction) {}
 
     /** moves the robot 2 steps */
-    move(board : Board, programs : Program[], robots : Robot[]) {
-        this.moveOnce(board, programs, robots);
+    move(game : Game) {
+        const win1 = this.moveOnce(game);
         this.intermediatePos = { x: this.x, y: this.y, facing: this.facing };
-        this.moveOnce(board, programs, robots);
+        if (win1 !== undefined) {
+            return [win1, 0];
+        }
+        const win2 = this.moveOnce(game);
+        if (win2 !== undefined) {
+            return [win2, 1];
+        }
+        return undefined;
     }
 
     /** moves the robot 1 step */
-    moveOnce(board : Board, programs : Program[], robots : Robot[]) {
-        const program = programs[board.get(this.x, this.y)];
+    moveOnce({ board, programs, robots, goals } : Game) {
+        const program = programs![board!.get(this.x, this.y)];
 
         const positionAfterStep = (isRight : boolean) : [number, number] => {
             const [x, y] = (isRight ? [
@@ -162,12 +199,12 @@ class Robot {
         }
 
         const pos = positionAfterStep(program.isRight);
-        const doOpposite = (board.get(...pos) ?? board.get(this.x, this.y)) === program.exception;
+        const doOpposite = (board!.get(...pos) ?? board!.get(this.x, this.y)) === program.exception;
         const direction = doOpposite !== program.isRight;
         const newPos = positionAfterStep(direction);
 
-        if (board.get(...newPos) === undefined ||
-                robots.some(robot => robot.x === newPos[0] && robot.y === newPos[1])) {
+        if (board!.get(...newPos) === undefined ||
+                robots!.some(robot => robot.x === newPos[0] && robot.y === newPos[1])) {
             // if the robot would go off the board or there is already a robot there,
             // it stays where it is and rotates 120 degrees
             this.rotate(direction ? -2 : 2);
@@ -176,6 +213,14 @@ class Robot {
             [this.x, this.y] = newPos;
            this.rotate(direction ? -1 : 1);
         }
+
+        for (let i = 0; i < goals!.length; i++) {
+            if (goals![i][0] === this.x && goals![i][1] === this.y) {
+                return i;
+            }
+        }
+
+        return undefined;
     }
 
     rotate(amount : -2 | -1 | 1 | 2) {

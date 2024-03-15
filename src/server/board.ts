@@ -43,6 +43,13 @@ export class Board {
         }).up().ele('polygon', {
             id: "up-triangle",
             points: "0.5,0 0,0.866 1,0.866"
+        }).up().ele('circle', {
+            id: "circle",
+            cx: 0.5,
+            cy: Math.sqrt(3) / 6,
+            r: 0.26,
+            stroke: "black",
+            'stroke-width': 0.05
         });
     
         // loop through all triangles in the grid.
@@ -63,6 +70,8 @@ export class Board {
                 });
             }
         }
+
+        svg.ele('g', { id: 'goals' });
 
         // make the robots
         const robots = svg.ele('g', { id: 'robots' });

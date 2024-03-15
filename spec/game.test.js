@@ -111,25 +111,7 @@ describe('game while playing', () => {
     });
 
     it('moves robots', () => {
-        const exampleGrid = [
-            [ ,  , 1, 0, 0, 1, 0, 0,  ,  ],
-            [ ,  , 1, 0, 2, 2, 1, 2,  ,  ],
-            [ ,  , 0, 1, 2, 1, 1, 2,  ,  ],
-            [ , 1, 2, 1, 1, 2, 2, 2, 2,  ],
-            [ , 2, 0, 0, 1, 2, 0, 1, 0,  ],
-            [ , 0, 0, 1, 2, 2, 0, 1, 1,  ],
-            [0, 0, 1, 0, 2, 1, 0, 2, 0, 1],
-            [1, 2, 2, 1, 0, 2, 2, 0, 1, 1],
-            [0, 1, 0, 0, 0, 1, 1, 2, 2, 0],
-            [ , 1, 2, 1, 2, 1, 2, 2, 0,  ],
-            [ , 0, 2, 1, 1, 1, 1, 0, 1,  ],
-            [ , 0, 0, 2, 0, 2, 1, 1, 1,  ],
-            [ ,  , 1, 1, 0, 1, 2, 1,  ,  ],
-            [ ,  , 2, 2, 2, 2, 1, 1,  ,  ],
-            [ ,  , 1, 2, 2, 2, 2, 0,  ,  ]
-        ];
-
-        spyOn(Board.prototype, 'get').and.callFake((x, y) => exampleGrid[x + 8][y + 5]);
+        makeFakeGrid();
 
         // set an example program
         game.programs[0].exception = 1;
@@ -151,4 +133,98 @@ describe('game while playing', () => {
         expect(game.robots[4]).toEqual(robot({ x: -2, y: -1, facing: 4 }));
         expect(game.robots[5]).toEqual(robot({ x: -2, y:  0, facing: 3 }));
     });
+
+    it('player of first goal to be reached wins', () => {
+        // win first step
+        let shouldWin = true;
+        spyOn(game.robots[5], 'moveOnce').and.callFake(() => {
+            if (shouldWin) {
+                shouldWin = false;
+                return 1;
+            }
+        });
+
+        // win second step
+        let shouldWin2 = false;
+        spyOn(game.robots[2], 'moveOnce').and.callFake(() => {
+            if (shouldWin2) {
+                return 0;
+            }
+            shouldWin2 = true;
+        });
+
+        game.doRound();
+
+        // first step player wins only
+        expect(player1.sendData).toHaveBeenCalledWith(
+            'winners', jasmine.arrayWithExactContents([1]));
+    });
+
+    it('should be a tie when two players win at once', () => {
+        // win second step
+        let shouldWin = false;
+        spyOn(game.robots[0], 'moveOnce').and.callFake(() => {
+            if (shouldWin) {
+                return 1;
+            }
+            shouldWin = true;
+        });
+
+        // win second step
+        let shouldWin2 = false;
+        spyOn(game.robots[1], 'moveOnce').and.callFake(() => {
+            if (shouldWin2) {
+                return 0;
+            }
+            shouldWin2 = true;
+        });
+
+        game.doRound();
+
+        expect(player1.sendData).toHaveBeenCalledWith(
+            'winners', jasmine.arrayWithExactContents([1, 0]));
+    });
+
+    it('robot makes player win when it steps on a goal', () => {
+        makeFakeGrid();
+
+        game.robots[0].x = -1;
+        game.robots[0].y = -3;
+        game.robots[0].facing = 3;
+
+        expect(game.robots[0].move(game)).toEqual([1, 0]);
+
+        const game2 = new Game(player1);
+        game2.join(player2);
+        game2.join(jasmine.createSpyObj('Connection', ['sendData']));
+        game2.start();
+
+        game2.robots[0].x = -1;
+        game2.robots[0].y = -3;
+        game2.robots[0].facing = 3;
+
+        expect(game2.robots[0].move(game2)).toBe(undefined);
+    });
 });
+
+function makeFakeGrid() {
+    const exampleGrid = [
+        [ ,  , 1, 0, 0, 1, 0, 0,  ,  ],
+        [ ,  , 1, 0, 2, 2, 1, 2,  ,  ],
+        [ ,  , 0, 1, 2, 1, 1, 2,  ,  ],
+        [ , 1, 2, 1, 1, 2, 2, 2, 2,  ],
+        [ , 2, 0, 0, 1, 2, 0, 1, 0,  ],
+        [ , 0, 0, 1, 2, 2, 0, 1, 1,  ],
+        [0, 0, 1, 0, 2, 1, 0, 2, 0, 1],
+        [1, 0, 2, 1, 0, 2, 2, 0, 1, 1],
+        [0, 1, 0, 0, 0, 1, 1, 2, 2, 0],
+        [ , 1, 2, 1, 2, 1, 2, 2, 0,  ],
+        [ , 0, 2, 1, 1, 1, 1, 0, 1,  ],
+        [ , 0, 0, 2, 0, 2, 1, 1, 1,  ],
+        [ ,  , 1, 1, 0, 1, 2, 1,  ,  ],
+        [ ,  , 2, 2, 2, 2, 1, 1,  ,  ],
+        [ ,  , 1, 2, 2, 2, 2, 0,  ,  ]
+    ];
+
+    spyOn(Board.prototype, 'get').and.callFake((x, y) => exampleGrid[x + 8][y + 5]);
+}

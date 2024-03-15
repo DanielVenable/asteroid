@@ -75,6 +75,7 @@ export default function player (
 
     /** a list of names of players */
     const names : String[] = [];
+    let me : Number;
 
     const programLoad = new Promise(resolve =>
         document.querySelector('object.programs')!.addEventListener('load', resolve));
@@ -282,8 +283,23 @@ export default function player (
             textElem.textContent = names[data.index] = data.name;
         } else if (type === 'you are') {
             (<HTMLInputElement> document.querySelector('#display-name')).value = data.name;
-            (<HTMLElement> document.querySelector('.you'))!.dataset.playerId = data.index;
-            (<HTMLElement> document.querySelector('.you'))!.append(createChangeElem());
+            (<HTMLElement> document.querySelector('.you')).dataset.playerId = me = data.index;
+            (<HTMLElement> document.querySelector('.you')).append(createChangeElem());
+        } else if (type === 'goals') {
+            for (let i = 0; i < data.length; i++) {
+                const [x, y] = data[i];
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+                circle.setAttribute('href', '#circle');
+                circle.setAttribute('transform',
+                    `translate(${x / 2}, ${((x + y) % 2 === 0 ? y : y + 1/3) * Math.sqrt(3) / 2})`);
+                if (i === me) {
+                    // make this player's goal brighter yellow
+                    circle.setAttribute('fill', '#ffff00');
+                } else {
+                    circle.setAttribute('fill', '#dddddd');
+                }
+                document.querySelector('#goals')!.append(circle);
+            }
         }
 
         function createChangeElem() {
