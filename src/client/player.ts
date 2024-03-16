@@ -77,6 +77,9 @@ export default function player (
     const names : String[] = [];
     let me : Number;
 
+    let isDone = false;
+    let begun = false;
+
     const programLoad = new Promise(resolve =>
         document.querySelector('object.programs')!.addEventListener('load', resolve));
 
@@ -88,85 +91,9 @@ export default function player (
         const [type, data] : [string, any] = JSON.parse(message.data);
 
         if (type === 'board') {
-
-            changeMode('playing');
+            if (!begun) begin();
             select('board-container').innerHTML = data;
-
-            const elem = document.createElement('div');
-            elem.classList.add('display-name');
-            elem.textContent =
-                (<HTMLInputElement> document.querySelector('#display-name')!).value;
-
-            document.querySelector('#display-name')!.remove();
-
-            document.querySelector('.you')!.prepend(elem);
- 
-            await programLoad;
-
-            const { contentDocument: doc } : HTMLObjectElement =
-                document.querySelector('object.programs')!,
-
-                menu : SVGElement = doc!.querySelector('#menu')!,
-                submitBtn : SVGElement = doc!.querySelector('#submit')!;
-
-            let selectedColor : number, value : number | boolean | undefined;
-
-            function setValue(val : number | boolean | undefined) {
-                if (value === val) return;
-
-                if (value === undefined) {
-                    // there was nothing selected but now there is
-                    submitBtn.classList.remove('hidden');
-                } else {
-                    // there was something selected
-                    buttons.get(value)!.classList.remove('selected');
-                }
-
-                if (val === undefined) {
-                    // it is being unselected
-                    submitBtn.classList.add('hidden');
-                } else {
-                    // something is being selected
-                    buttons.get(val)!.classList.add('selected');
-                }
-
-                value = val;
-            }
-
-            /** a map from value to button */
-            const buttons = new Map(<[number | boolean, SVGElement][]> [
-                [false, doc!.querySelector('#btn-l')],
-                [true, doc!.querySelector('#btn-r')]
-            ]);
-
-            // when you click on a program tile, select that color and show the menu
-            for (const color of [0, 1, 2]) {
-                buttons.set(color, doc!.querySelector(`[data-btn-color="${color}"]`)!);
-
-                doc!.querySelector(`[data-color="${color}"]`)!
-                        .addEventListener('click', () => {
-                    menu.classList.remove('hidden');
-                    setValue(undefined);
-                    selectedColor = color;
-                });
-            }
-
-            // attach events to each button that set value
-            for (const [val, btn] of buttons) {
-                btn.addEventListener('click', () => setValue(val));
-            }
-
-            doc!.querySelector('#submit')!.addEventListener('click', () => {
-                // submit whatever is selected
-                if (selectedColor !== undefined && value !== undefined) {
-                    emit('action', [selectedColor, value]);
-                    menu.classList.add('hidden');
-                    setValue(undefined);
-                } else {
-                    console.error('value must be selected before submitting');
-                }
-            });
-
+            isDone = false;
         } else if (type === 'code') {
             changeMode('waiting-for-players');
             select('code').textContent = data;
@@ -292,14 +219,27 @@ export default function player (
                 circle.setAttribute('href', '#circle');
                 circle.setAttribute('transform',
                     `translate(${x / 2}, ${((x + y) % 2 === 0 ? y : y + 1/3) * Math.sqrt(3) / 2})`);
+                circle.dataset.player = String(i);
                 if (i === me) {
-                    // make this player's goal brighter yellow
+                    // make this player's goal bright yellow
                     circle.setAttribute('fill', '#ffff00');
                 } else {
+                    // other players' goals are gray
                     circle.setAttribute('fill', '#dddddd');
                 }
                 document.querySelector('#goals')!.append(circle);
+
+                const player = document.querySelector(`.players > [data-player-id="${i}"`)!.classList;
+
+                circle.addEventListener('pointerenter', () => player.add('highlight'));
+                circle.addEventListener('pointerout', () => player.remove('highlight'));
             }
+        } else if (type === 'winners') {
+            for (const winner of data) {
+                document.querySelector(`.players > [data-player-id="${winner}"] > .display-name`)!
+                    .insertAdjacentHTML('afterend', '<div class="winner">Winner!</div>');
+            }
+            isDone = true;
         }
 
         function createChangeElem() {
@@ -310,4 +250,88 @@ export default function player (
             return changeElem;
         }
     });
+
+
+    async function begin() {
+        begun = true;
+
+        changeMode('playing');
+
+        // set this player's display name
+        const elem = document.createElement('div');
+        elem.classList.add('display-name');
+        elem.textContent =
+            (<HTMLInputElement> document.querySelector('#display-name')!).value;
+        document.querySelector('#display-name')!.remove();
+        document.querySelector('.you')!.prepend(elem);
+
+        // attach event listeners to programs
+        await programLoad;
+        
+        const { contentDocument: doc } : HTMLObjectElement =
+        document.querySelector('object.programs')!,
+
+        menu : SVGElement = doc!.querySelector('#menu')!,
+        submitBtn : SVGElement = doc!.querySelector('#submit')!;
+
+        let selectedColor : number, value : number | boolean | undefined;
+
+        function setValue(val : number | boolean | undefined) {
+            if (value === val) return;
+
+            if (value === undefined) {
+                // there was nothing selected but now there is
+                submitBtn.classList.remove('hidden');
+            } else {
+                // there was something selected
+                buttons.get(value)!.classList.remove('selected');
+            }
+
+            if (val === undefined) {
+                // it is being unselected
+                submitBtn.classList.add('hidden');
+            } else {
+                // something is being selected
+                buttons.get(val)!.classList.add('selected');
+            }
+
+            value = val;
+        }
+
+        /** a map from value to button */
+        const buttons = new Map(<[number | boolean, SVGElement][]> [
+            [false, doc!.querySelector('#btn-l')],
+            [true, doc!.querySelector('#btn-r')]
+        ]);
+
+        // when you click on a program tile, select that color and show the menu
+        for (const color of [0, 1, 2]) {
+            buttons.set(color, doc!.querySelector(`[data-btn-color="${color}"]`)!);
+
+            doc!.querySelector(`[data-color="${color}"]`)!
+                    .addEventListener('click', () => {
+                if (!isDone) {
+                    menu.classList.remove('hidden');
+                    setValue(undefined);
+                    selectedColor = color;
+                }
+            });
+        }
+
+        // attach events to each button that set value
+        for (const [val, btn] of buttons) {
+            btn.addEventListener('click', () => setValue(val));
+        }
+
+        doc!.querySelector('#submit')!.addEventListener('click', () => {
+            // submit whatever is selected
+            if (selectedColor !== undefined && value !== undefined) {
+                emit('action', [selectedColor, value]);
+                menu.classList.add('hidden');
+                setValue(undefined);
+            } else {
+                console.error('value must be selected before submitting');
+            }
+        });
+    }
 }

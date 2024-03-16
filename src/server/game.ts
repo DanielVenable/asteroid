@@ -7,6 +7,7 @@ import type Connection from './connection.js';
 export default class Game {
     players : Connection[] = [];
     isStarted = false;
+    isDone = false;
     code?: string;
 
     board? : Board;
@@ -71,7 +72,7 @@ export default class Game {
 
     /** accept an action from a player */
     action(player : Connection, data : any) {
-        if (this.isStarted) {
+        if (this.isStarted && !this.isDone) {
             if (data instanceof Array &&
                     [Color.RED, Color.GREEN, Color.BLUE].includes(data[0]) &&
                     [Color.RED, Color.GREEN, Color.BLUE, true, false].includes(data[1])) {
@@ -119,6 +120,7 @@ export default class Game {
                 }
             }
             this.emit('winners', winners.map(([a]) => a));
+            this.isDone = true;
         }
 
         // send information to the players

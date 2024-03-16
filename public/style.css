@@ -104,6 +104,10 @@ button:active {
     overflow: auto;
 }
 
-[data-mode="playing"] .you {
+[data-mode="playing"] .you .display-name {
     font-weight: bold;
+}
+
+.highlight {
+    background-color: yellow;
 }
