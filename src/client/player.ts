@@ -73,8 +73,6 @@ export default function player (
     /** the directions each of the robots are facing */
     const robotFacing = [0, 1, 2, 3, 4, 5];
 
-    /** a list of names of players */
-    const names : String[] = [];
     let me : Number;
 
     let isDone = false;
@@ -181,9 +179,9 @@ export default function player (
                 return [(x + 1) / 2, Math.sqrt(3) / 2 * (y + ((x + y) % 2 === 0 ? 1/3 : 2/3))];
             }
         } else if (type === 'changes') {
-            for (let i = 0; i < data.length; i++) {
+            for (const [player, [color, value]] of data) {
                 const object : HTMLObjectElement = document.querySelector(
-                    `[data-player-id="${i}"] object.status`)!;
+                    `[data-player-id="${player}"] object.status`)!;
                 
                 if (object.contentDocument === null) {
                     // not loaded yet
@@ -191,14 +189,12 @@ export default function player (
                 }
 
                 const doc = object.contentDocument!;
-                (<SVGElement> doc.querySelector('#triangle'))!.dataset.color = data[i][0];
-                doc.documentElement.dataset.value = data[i][1];
+                (<SVGElement> doc.querySelector('#triangle'))!.dataset.color = color;
+                doc.documentElement.dataset.value = value;
             }
         } else if (type === 'name') {
-            let textElem;
-            if (data.index in names) {
-                textElem = document.querySelector(`[data-player-id="${data.index}"] > .display-name`)!;
-            } else {
+            let textElem = document.querySelector(`[data-player-id="${data.index}"] > .display-name`);
+            if (textElem === null) {
                 const parentElem = document.createElement('div'),
                     changeElem = createChangeElem();
                 textElem = document.createElement('div');
@@ -207,14 +203,13 @@ export default function player (
                 parentElem.dataset.playerId = data.index;
                 document.querySelector('.players')!.append(parentElem);
             }
-            textElem.textContent = names[data.index] = data.name;
+            textElem.textContent = data.name;
         } else if (type === 'you are') {
             (<HTMLInputElement> document.querySelector('#display-name')).value = data.name;
             (<HTMLElement> document.querySelector('.you')).dataset.playerId = me = data.index;
             (<HTMLElement> document.querySelector('.you')).append(createChangeElem());
         } else if (type === 'goals') {
-            for (let i = 0; i < data.length; i++) {
-                const [x, y] = data[i];
+            for (const [i, [x, y]] of data) {
                 const circle = document.createElementNS('http://www.w3.org/2000/svg', 'use');
                 circle.setAttribute('href', '#circle');
                 circle.setAttribute('transform',
@@ -229,10 +224,10 @@ export default function player (
                 }
                 document.querySelector('#goals')!.append(circle);
 
-                const player = document.querySelector(`.players > [data-player-id="${i}"`)!.classList;
+                const player = document.querySelector(`.players > [data-player-id="${i}"`)?.classList;
 
-                circle.addEventListener('pointerenter', () => player.add('highlight'));
-                circle.addEventListener('pointerout', () => player.remove('highlight'));
+                circle.addEventListener('pointerenter', () => player?.add('highlight'));
+                circle.addEventListener('pointerout', () => player?.remove('highlight'));
             }
         } else if (type === 'winners') {
             for (const winner of data) {
@@ -240,6 +235,12 @@ export default function player (
                     .insertAdjacentHTML('afterend', '<div class="winner">Winner!</div>');
             }
             isDone = true;
+        } else if (type === 'remove') {
+            document.querySelector(`.players > [data-player-id="${data}"]`)!.remove();
+            document.querySelector(`#goals > [data-player="${data}"]`)!.remove();
+        } else if (type === 'host') {
+            select('begin').hidden = false;
+            btnClick('begin', () => emit('begin'));
         }
 
         function createChangeElem() {
@@ -250,7 +251,6 @@ export default function player (
             return changeElem;
         }
     });
-
 
     async function begin() {
         begun = true;

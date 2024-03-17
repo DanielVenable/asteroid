@@ -102,8 +102,8 @@ describe('game while playing', () => {
         game.action(player2, [2, true]);
 
         const changes = jasmine.arrayContaining([
-            jasmine.arrayContaining([0, 1]),
-            jasmine.arrayContaining([2, true])
+            jasmine.arrayContaining([0, jasmine.arrayContaining([0, 1])]),
+            jasmine.arrayContaining([1, jasmine.arrayContaining([2, true])])
         ]);
 
         expect(player1.sendData).toHaveBeenCalledWith('changes', changes);

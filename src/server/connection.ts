@@ -8,6 +8,7 @@ export default class Connection {
 
     constructor(private socket : WebSocket) {
         socket.on('message', data => this.receive(data));
+        socket.on('close', () => this.game?.remove(this));
     }
 
     /** handle an incoming message */
@@ -40,8 +41,8 @@ export default class Connection {
                 }
             }
         } else if (type === 'begin') {
-            if (this === this.game?.players[0]) {
-                this.game.start();
+            if (this.game?.players[Symbol.iterator]().next().value === this) {
+                this.game!.start();
             }
         } else if (type === 'action') {
             this.game?.action(this, info);

@@ -5,16 +5,17 @@ import { Board, Color } from './board.js';
 import type Connection from './connection.js';
 
 export default class Game {
-    players : Connection[] = [];
+    players : Set<Connection> = new Set;
     isStarted = false;
     isDone = false;
     code?: string;
+    playerNum = 0;
 
     board? : Board;
     robots? : Robot[];
     programs? : Program[];
     changes : Map<Connection, Change> = new Map;
-    goals? : Number[][];
+    goals? : Map<Number, Number[]>;
 
     constructor(creator : Connection) {
         this.newPlayer(creator);
@@ -23,7 +24,7 @@ export default class Game {
 
     /** adds a player to this game */
     join(player : Connection) {
-        if (this.players.length >= 6) {
+        if (this.players.size >= 6) {
             return 'full';
         }
         if (this.isStarted) {
@@ -39,21 +40,32 @@ export default class Game {
     }
 
     newPlayer(player : Connection) {
-        player.number = this.players.length;
-        player.name = `Player ${player.number + 1}`;
+        player.number = this.playerNum++;
+        player.name = `Player ${this.playerNum}`;
         const obj = { index: player.number, name: player.name };
         this.emit('name', obj);
         player.sendData('you are', obj);
-        this.players[player.number] = player;
+        this.players.add(player);
     }
 
     /** tells everyone else one player's new name */
     nameChange(player : Connection) {
-        for (let i = 0; i < this.players.length; i++) {
-            if (i !== player.number) {
-                this.players[i].sendData('name', { index: player.number, name: player.name });
+        for (const other of this.players) {
+            if (other.number !== player.number) {
+                other.sendData('name', { index: player.number, name: player.name });
             }
         }
+    }
+
+    /** remove a player from the game */
+    remove(player : Connection) {
+        const iterator = this.players[Symbol.iterator]();
+        if (player === iterator.next().value) {
+            iterator.next().value?.sendData('host');
+        }
+        this.players.delete(player);
+        this.goals?.delete(player.number!);
+        this.emit('remove', player.number);
     }
 
     /** starts the game */
@@ -62,12 +74,17 @@ export default class Game {
         this.board = new Board();
         this.robots = Robot.make6();
         this.programs = Program.make3();
-        this.goals = Game.goals[this.players.length - 1];
+
+        this.goals = new Map;
+        const goals = Game.goals[this.players.size - 1][Symbol.iterator]();
+        for (const { number } of this.players) {
+            this.goals.set(number!, goals.next().value);
+        }
 
         this.emit('board', this.board.toSVG());
         this.emit('robots', this.robots);
         this.emit('programs', this.programs);
-        this.emit('goals', this.goals);
+        this.emit('goals', [...this.goals]);
     }
 
     /** accept an action from a player */
@@ -81,7 +98,7 @@ export default class Game {
                 this.changes.delete(player);
             }
 
-            if (this.changes.size === this.players.length) {
+            if (this.changes.size === this.players.size) {
                 // all changes are in
                 this.doRound();
             }
@@ -124,7 +141,8 @@ export default class Game {
         }
 
         // send information to the players
-        this.emit('changes', this.players.map(player => this.changes.get(player)));
+        this.emit('changes', [...this.players].map(player =>
+            [player.number, this.changes.get(player)]));
         this.emit('robots', this.robots);
         this.emit('programs', this.programs);
 
@@ -216,8 +234,8 @@ class Robot {
            this.rotate(direction ? -1 : 1);
         }
 
-        for (let i = 0; i < goals!.length; i++) {
-            if (goals![i][0] === this.x && goals![i][1] === this.y) {
+        for (const [i, [x, y]] of goals!) {
+            if (x === this.x && y === this.y) {
                 return i;
             }
         }
