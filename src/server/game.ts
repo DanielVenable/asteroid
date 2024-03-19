@@ -50,11 +50,7 @@ export default class Game {
 
     /** tells everyone else one player's new name */
     nameChange(player : Connection) {
-        for (const other of this.players) {
-            if (other.number !== player.number) {
-                other.sendData('name', { index: player.number, name: player.name });
-            }
-        }
+        this.tellOthers(player, 'name', {index: player.number, name: player.name});
     }
 
     /** remove a player from the game */
@@ -85,6 +81,13 @@ export default class Game {
         this.emit('robots', this.robots);
         this.emit('programs', this.programs);
         this.emit('goals', [...this.goals]);
+    }
+
+    /** swich back to waiting for players mode */
+    restart(player : Connection) {
+        this.isDone = false;
+        this.isStarted = false;
+        this.tellOthers(player, 'restart', undefined);
     }
 
     /** accept an action from a player */
@@ -159,6 +162,14 @@ export default class Game {
     emit(type : string, data : any) {
         for (const player of this.players) {
             player.sendData(type, data);
+        }
+    }
+
+    tellOthers(player : Connection, type : string, data : any) {
+        for (const other of this.players) {
+            if (other !== player) {
+                other.sendData(type, data);
+            }
         }
     }
 

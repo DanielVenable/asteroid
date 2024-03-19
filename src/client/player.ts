@@ -33,6 +33,16 @@ export default function player (
         document.body.dataset.mode = newMode;
     }
 
+    function enableHostControls() {
+        document.body.classList.add('host');
+        btnClick('begin', () => emit('begin'));
+        btnClick('restart', () => {
+            emit('restart');
+            reset();
+            select('restart-container').hidden = true;
+        });
+    }
+
     // if the url is for a specific game, join it
     let joiningFromURL = false;
 
@@ -47,8 +57,7 @@ export default function player (
     btnClick('start', () => {
         emit('new game');
         changeMode('waiting-for-players');
-        select('begin').hidden = false;
-        btnClick('begin', () => emit('begin'));
+        enableHostControls();
     });
 
     btnClick('join', () => {
@@ -90,6 +99,7 @@ export default function player (
 
         if (type === 'board') {
             if (!begun) begin();
+            changeMode('playing');
             select('board-container').innerHTML = data;
             isDone = false;
         } else if (type === 'code') {
@@ -235,12 +245,14 @@ export default function player (
                     .insertAdjacentHTML('afterend', '<div class="winner">Winner!</div>');
             }
             isDone = true;
+            select('restart-container').hidden = false;
         } else if (type === 'remove') {
             document.querySelector(`.players > [data-player-id="${data}"]`)!.remove();
             document.querySelector(`#goals > [data-player="${data}"]`)!.remove();
         } else if (type === 'host') {
-            select('begin').hidden = false;
-            btnClick('begin', () => emit('begin'));
+            enableHostControls();
+        } else if (type === 'restart') {
+            reset();
         }
 
         function createChangeElem() {
@@ -254,8 +266,6 @@ export default function player (
 
     async function begin() {
         begun = true;
-
-        changeMode('playing');
 
         // set this player's display name
         const elem = document.createElement('div');
@@ -333,5 +343,14 @@ export default function player (
                 console.error('value must be selected before submitting');
             }
         });
+    }
+
+    function reset() {
+        changeMode('waiting-for-players');
+        document.querySelectorAll('.winner').forEach(elem => elem.remove());
+        for (const elem of document.querySelectorAll('.status')){
+            (<HTMLObjectElement> elem).contentDocument
+                ?.documentElement.removeAttribute('data-value');
+        }
     }
 }

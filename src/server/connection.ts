@@ -41,7 +41,7 @@ export default class Connection {
                 }
             }
         } else if (type === 'begin') {
-            if (this.game?.players[Symbol.iterator]().next().value === this) {
+            if (this.isHost()) {
                 this.game!.start();
             }
         } else if (type === 'action') {
@@ -49,11 +49,19 @@ export default class Connection {
         } else if (type === 'display name' && String(info) && this.game?.isStarted === false) {
             this.name = String(info);
             this.game.nameChange(this);
+        } else if (type === 'restart') {
+            if (this.isHost()) {
+                this.game!.restart(this);
+            } 
         }
     }
 
     /** send information to the client */
     sendData(type : string, data : any) {
         this.socket.send(JSON.stringify([type, data]));
+    }
+
+    isHost() {
+        return this.game?.players[Symbol.iterator]().next().value === this;
     }
 }

@@ -33,7 +33,7 @@ html, body {
     [data-mode="intro"] .intro,
     [data-mode="waiting-for-players"] .waiting-for-players,
     [data-mode="playing"] .playing,
-    body:not([data-mode="intro"]) .players 
+    body:not([data-mode="intro"]) .players
 ) {
     display: none;
 }
@@ -110,4 +110,12 @@ button:active {
 
 .highlight {
     background-color: yellow;
+}
+
+body:not(.host) :is(#begin, #restart-container) {
+    display: none;
+}
+
+#restart-container {
+    flex: auto 0 0;
 }
