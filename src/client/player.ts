@@ -101,12 +101,15 @@ export default function player (
             if (!begun) begin();
             changeMode('playing');
             select('board-container').innerHTML = data;
+            document.querySelectorAll(`.status`).forEach(async (object : any) => {
+                (await getLoadedContentDoc(object)).dataset.status = 'waiting';
+            });
             isDone = false;
         } else if (type === 'code') {
             changeMode('waiting-for-players');
             select('code').textContent = data;
             genQR(data);
-            history.pushState({}, '', '?g=' + data);
+            history.replaceState({}, '', '?g=' + data);
         } else if (type === 'join error') {
             if (joiningFromURL) {
                 console.error('Unable to join from URL. Reason: ', data);
@@ -190,17 +193,13 @@ export default function player (
             }
         } else if (type === 'changes') {
             for (const [player, [color, value]] of data) {
-                const object : HTMLObjectElement = document.querySelector(
-                    `[data-player-id="${player}"] object.status`)!;
-                
-                if (object.contentDocument === null) {
-                    // not loaded yet
-                    await new Promise(resolve => object.addEventListener('load', resolve));
-                }
-
-                const doc = object.contentDocument!;
+                const doc = await getLoadedContentDoc(
+                    document.querySelector(`[data-player-id="${player}"] object.status`)!);
                 (<SVGElement> doc.querySelector('#triangle'))!.dataset.color = color;
-                doc.documentElement.dataset.value = value;
+                doc.dataset.value = value;
+                if (!isDone) {
+                    doc.dataset.status = 'waiting';
+                }
             }
         } else if (type === 'name') {
             let textElem = document.querySelector(`[data-player-id="${data.index}"] > .display-name`);
@@ -245,6 +244,9 @@ export default function player (
                     .insertAdjacentHTML('afterend', '<div class="winner">Winner!</div>');
             }
             isDone = true;
+            for (const object of document.querySelectorAll('.status')) {
+                (await getLoadedContentDoc(<HTMLObjectElement> object)).dataset.status = 'done';
+            }
             select('restart-container').hidden = false;
         } else if (type === 'remove') {
             document.querySelector(`.players > [data-player-id="${data}"]`)!.remove();
@@ -253,6 +255,10 @@ export default function player (
             enableHostControls();
         } else if (type === 'restart') {
             reset();
+        } else if (type === 'ready') {
+            (await getLoadedContentDoc(
+                document.querySelector(`[data-player-id="${data}"] object.status`)!))
+                .dataset.status = 'ready';
         }
 
         function createChangeElem() {
@@ -263,6 +269,15 @@ export default function player (
             return changeElem;
         }
     });
+
+    async function getLoadedContentDoc(object : HTMLObjectElement) {
+        if (object.contentDocument === null) {
+            // not loaded yet
+            await new Promise(resolve => object.addEventListener('load', resolve));
+        }
+
+        return object.contentDocument!.documentElement;
+    }
 
     async function begin() {
         begun = true;
@@ -333,10 +348,12 @@ export default function player (
             btn.addEventListener('click', () => setValue(val));
         }
 
-        doc!.querySelector('#submit')!.addEventListener('click', () => {
+        doc!.querySelector('#submit')!.addEventListener('click', async () => {
             // submit whatever is selected
             if (selectedColor !== undefined && value !== undefined) {
                 emit('action', [selectedColor, value]);
+                (await getLoadedContentDoc(document.querySelector('.you .status')!))
+                    .dataset.status = 'ready';
                 menu.classList.add('hidden');
                 setValue(undefined);
             } else {

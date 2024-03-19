@@ -104,6 +104,8 @@ export default class Game {
             if (this.changes.size === this.players.size) {
                 // all changes are in
                 this.doRound();
+            } else {
+                this.tellOthers(player, 'ready', player.number);
             }
         }
     }
