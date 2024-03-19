@@ -95,6 +95,7 @@ button:active {
 }
 
 .status {
+    height: 1em; /* for older browsers */
     height: 1lh;
 }
 

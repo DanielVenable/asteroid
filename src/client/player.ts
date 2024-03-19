@@ -87,9 +87,6 @@ export default function player (
     let isDone = false;
     let begun = false;
 
-    const programLoad = new Promise(resolve =>
-        document.querySelector('object.programs')!.addEventListener('load', resolve));
-
     // handle information from the server:
 
     ws.addEventListener('message', async message => {
@@ -127,13 +124,12 @@ export default function player (
                 response.classList.add('join-error');
             }
         } else if (type === 'programs') {
-            await programLoad;
+            const doc = await getLoadedContentDoc(document.querySelector('object.programs')!);
 
-            const elem : HTMLObjectElement = document.querySelector(`object.programs`)!;
             for (const { isRight, exception, color } of data) {
                 const triangles : [SVGPathElement, SVGPathElement] = [
-                    elem.contentDocument!.querySelector(`[data-color="${color}"] .left`)!,
-                    elem.contentDocument!.querySelector(`[data-color="${color}"] .right`)!];
+                    doc.querySelector(`[data-color="${color}"] .left`)!,
+                    doc.querySelector(`[data-color="${color}"] .right`)!];
                 
                 triangles[+isRight].style.fill = colors[exception];
                 triangles[+!isRight].style.fill = 'none';
@@ -291,13 +287,9 @@ export default function player (
         document.querySelector('.you')!.prepend(elem);
 
         // attach event listeners to programs
-        await programLoad;
-        
-        const { contentDocument: doc } : HTMLObjectElement =
-        document.querySelector('object.programs')!,
-
-        menu : SVGElement = doc!.querySelector('#menu')!,
-        submitBtn : SVGElement = doc!.querySelector('#submit')!;
+        const doc = await getLoadedContentDoc(document.querySelector('object.programs')!),
+            menu : SVGElement = doc!.querySelector('#menu')!,
+            submitBtn : SVGElement = doc!.querySelector('#submit')!;
 
         let selectedColor : number, value : number | boolean | undefined;
 
